@@ -1,2 +1,2 @@
 # hardware_mon
-Monitor your hardware usage
+Monitor your cpu, ram usage and temperatures.
