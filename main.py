@@ -11,8 +11,6 @@ class Window(QWidget):
     def __init__(self):
         super().__init__()
         
-       # self.setFixedSize(230,60)
-        
         self.setWindowFlags(
             Qt.Widget |
             Qt.WindowCloseButtonHint |
@@ -23,7 +21,6 @@ class Window(QWidget):
         self.setParent(None)
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowTitle("Monitor")
         self.threading = ThreadClass()
         self.m_nMouseClick_X_Coordinate = None
         self.m_nMouseClick_Y_Coordinate = None
@@ -33,7 +30,6 @@ class Window(QWidget):
         self.threading2.start()
         self.threading.start()
         self.progress_stylesheet = """
-        
         
         QProgressBar {
         border: 2px solid transparent;
@@ -47,7 +43,6 @@ class Window(QWidget):
         QProgressBar::chunk {
         background-color: #00ff00;
         width: 29px;
-        
         
         }
         
@@ -91,10 +86,10 @@ class Window(QWidget):
         self.cpu_temp.setValue(100)
         self.cpu_temp.setFormat("%p°C")
         
-        self.main_layout = QVBoxLayout()
-        self.ram_layout = QHBoxLayout()
-        self.cpu_layout = QHBoxLayout()
-        self.cpu_temp_layout = QHBoxLayout()
+        self.main_layout = QHBoxLayout()
+        self.text_layout = QVBoxLayout()
+        self.value_layout = QVBoxLayout()
+        # self.cpu_temp_layout = QHBoxLayout()
         
         self.ram_text = QLabel("<h3>RAM USAGE:</h3> ", self)
         self.ram_text.setStyleSheet("color: #00ff00")
@@ -105,22 +100,21 @@ class Window(QWidget):
         self.cpu_text = QLabel("<h3>CPU USAGE:</h3> ", self)
         self.cpu_text.setStyleSheet("color: #00ff00")
         
+        self.text_layout.addWidget(self.cpu_text)
+        self.value_layout.addWidget(self.cpu)
         
-        self.cpu_temp_layout.addWidget(self.cpu_value_text)
-        self.cpu_temp_layout.addWidget(self.cpu_temp)
+        self.text_layout.addWidget(self.ram_text)
+        self.value_layout.addWidget(self.ram)
         
-        self.ram_layout.addWidget(self.ram_text)
-        self.ram_layout.addWidget(self.ram)
+        self.text_layout.addWidget(self.cpu_value_text)
+        self.value_layout.addWidget(self.cpu_temp)
         
-        self.cpu_layout.addWidget(self.cpu_text)
-        self.cpu_layout.addWidget(self.cpu)
-        
-        self.main_layout.addLayout(self.ram_layout)
-        self.main_layout.addLayout(self.cpu_layout)
-        self.main_layout.addLayout(self.cpu_temp_layout)
+        self.main_layout.addLayout(self.text_layout)
+        self.main_layout.addLayout(self.value_layout)
         
         self.cpu.setStyleSheet(self.progress_stylesheet)
         self.ram.setStyleSheet(self.progress_stylesheet)
+        
         self.cpu_temp.setStyleSheet(self.temp_stylesheet)
         self.cpu_text.move(0, 35)
         
@@ -138,7 +132,7 @@ class Window(QWidget):
 
     def mouseMoveEvent(self, event):
         delta = QPoint (event.globalPos() - self.oldPos)
-        #print(delta)
+    
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.oldPos = event.globalPos()
     
@@ -206,8 +200,3 @@ if __name__ == "__main__":
     gui = Window()
     sys.exit(app.exec_())
     
-
-
-
-
-
