@@ -33,10 +33,12 @@ class Window(QWidget):
         self.threading2 = ThreadClass2()
         self.threading3 = Temperature_thread()
         self.threading4 = Disk_thread()
+        self.threading5 = Battery_watt_thread()
         self.threading3.start()
         self.threading2.start()
         self.threading.start()
         self.threading4.start()
+        self.threading5.start()
         self.progress_stylesheet = """
         
         QProgressBar {
@@ -79,6 +81,7 @@ class Window(QWidget):
         self.threading.signal.connect(self.cpu_val)
         self.threading3.signal3.connect(self.cpu_temp_val)
         self.threading4.signal4.connect(self.disk_usage_val)
+        self.threading5.signal5.connect(self.battery_watt_val)
 
         self.initUI()
 
@@ -86,16 +89,20 @@ class Window(QWidget):
     def initUI(self):
         
         self.ram = QProgressBar(self)
+        self.ram.setFixedWidth(150)
         self.ram.setValue(100)
         
         self.cpu = QProgressBar(self)
+        self.cpu.setFixedWidth(150)
         self.cpu.setValue(100)
         
         self.cpu_temp = QProgressBar(self)
+        self.cpu_temp.setFixedWidth(150)
         self.cpu_temp.setValue(100)
         self.cpu_temp.setFormat("%p°C")
         
         self.disk_usage = QProgressBar(self)
+        self.disk_usage.setFixedWidth(150)
         self.disk_usage.setValue(self.usage)
         
         self.main_layout = QHBoxLayout()
@@ -114,7 +121,7 @@ class Window(QWidget):
         self.disk_usage_text = QLabel("<h3>DISK USED: </h3> ", self)
         self.disk_usage_text.setStyleSheet("color: #00ff00")
         
-        self.disk_space_left_text = QLabel("<h3>DISK SPACE LEFT:</h3> ")
+        self.disk_space_left_text = QLabel("<h3>FREE DISK SPACE:</h3> ")
         self.disk_space_left_text.setStyleSheet("color: #00ff00")
         self.disk_space_left_text.setAlignment(Qt.AlignBottom)
         
@@ -122,7 +129,19 @@ class Window(QWidget):
         self.disk_space_left.setStyleSheet("color: #000000; background-color: #00ff00")
         self.disk_space_left.setAlignment(Qt.AlignCenter)
         self.disk_space_left.setFixedWidth(70)
-                
+        self.disk_space_left.setFixedHeight(24)
+        
+        self.battery_usage_text = QLabel("<h3>POWER USAGE:</h3> ", self)
+        self.battery_usage = QLabel("<h3>NaN</h3>", self)
+        
+        self.battery_usage_text.setStyleSheet("color: #00ff00")
+        self.battery_usage.setStyleSheet("color: #000000; background-color: #00ff00")
+        
+        self.battery_usage.setAlignment(Qt.AlignCenter)
+        self.battery_usage_text.setAlignment(Qt.AlignBottom)
+        self.battery_usage.setFixedWidth(60)
+        self.battery_usage.setFixedHeight(24)
+        
         self.text_layout.addWidget(self.cpu_text)
         self.value_layout.addWidget(self.cpu)
         
@@ -137,6 +156,9 @@ class Window(QWidget):
         
         self.text_layout.addWidget(self.disk_space_left_text)
         self.value_layout.addWidget(self.disk_space_left)
+        
+        self.text_layout.addWidget(self.battery_usage_text)
+        self.value_layout.addWidget(self.battery_usage)
         
         self.main_layout.addLayout(self.text_layout)
         self.main_layout.addLayout(self.value_layout)
@@ -181,6 +203,9 @@ class Window(QWidget):
         disk_used = round(used/total*100)
         self.disk_usage.setValue(int(disk_used))
         self.disk_space_left.setText("<h3>" + str(int(free/1000000000)) + " GiB</h3>")
+        
+    def battery_watt_val(self, battery_watt_value):
+        self.battery_usage.setText("<h3>" + str(battery_watt_value) + " W</h3>")    
 
 
 class ThreadClass(QThread):
@@ -244,7 +269,23 @@ class Disk_thread(QThread):
             self.signal4.emit((free, total, used))  
             time.sleep(30)   
             
+
+class Battery_watt_thread(QThread):
+    signal5 = pyqtSignal(int)
+    
+    def __init__(self):
+        super().__init__()
+        
+    def run(self):
+        self.process = QProcess()
+        while True:
+            self.process.start("cat /sys/class/power_supply/BAT0/power_now")
+            self.process.waitForFinished(-1)
+            power_usage = int(self.process.readAllStandardOutput())/1000000
+            self.signal5.emit(power_usage)
+            time.sleep(0.3)
             
+                        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     gui = Window()
