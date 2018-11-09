@@ -4,7 +4,8 @@
 1) Monitoring CPU usage
 2) Monitoring RAM usage
 3) Monitoring CPU temperature
-4) Shows how much disk space is left
-5) Shows how much disk space is used
+4) Displays disk usage
+5) Displays free disk space in `/`
+6) Displays power current power usage
 
-![alt_text](https://raw.githubusercontent.com/Fuchsiaff/as/master/pc.png)
+![alt_text](https://raw.githubusercontent.com/Fuchsiaff/as/master/pic.png)
