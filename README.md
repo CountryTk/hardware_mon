@@ -1,5 +1,5 @@
 # Hardware monitor made for GNU/Linux
-
+# This software is intended for use on laptops
 # Useful for:
 1) Monitoring CPU usage
 2) Monitoring RAM usage
