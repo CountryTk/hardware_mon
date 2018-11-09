@@ -119,8 +119,9 @@ class Window(QWidget):
         self.disk_space_left_text.setAlignment(Qt.AlignBottom)
         
         self.disk_space_left = QLabel("<h3>" + str(int(self.free/1000000000)) + " GiB</h3>", self)
-        self.disk_space_left.setStyleSheet("color: #00ff00")
-        self.disk_space_left.setAlignment(Qt.AlignTop)
+        self.disk_space_left.setStyleSheet("color: #000000; background-color: #00ff00")
+        self.disk_space_left.setAlignment(Qt.AlignCenter)
+        self.disk_space_left.setFixedWidth(70)
                 
         self.text_layout.addWidget(self.cpu_text)
         self.value_layout.addWidget(self.cpu)
@@ -144,7 +145,7 @@ class Window(QWidget):
         self.ram.setStyleSheet(self.progress_stylesheet)
         self.disk_usage.setStyleSheet(self.progress_stylesheet)
         self.cpu_temp.setStyleSheet(self.temp_stylesheet)
-        
+        self
         self.setLayout(self.main_layout)
         self.show()
         
@@ -179,6 +180,7 @@ class Window(QWidget):
         total_in_GiB = total/1000000000
         disk_used = round(used/total*100)
         self.disk_usage.setValue(int(disk_used))
+        self.disk_space_left.setText("<h3>" + str(int(free/1000000000)) + " GiB</h3>")
 
 
 class ThreadClass(QThread):
@@ -211,7 +213,6 @@ class ThreadClass2(QThread):
 
 
 class Temperature_thread(QThread):
-    
     signal3 = pyqtSignal(int)
     
     def __init__(self):
@@ -227,8 +228,8 @@ class Temperature_thread(QThread):
             self.signal3.emit(temp_value)
             time.sleep(0.3)
             
+            
 class Disk_thread(QThread):
-    
     signal4 = pyqtSignal(object)
     
     def __init__(self):
@@ -242,6 +243,7 @@ class Disk_thread(QThread):
             used = (st.f_blocks - st.f_bfree) * st.f_frsize
             self.signal4.emit((free, total, used))  
             time.sleep(30)   
+            
             
 if __name__ == "__main__":
     app = QApplication(sys.argv)
