@@ -1,4 +1,4 @@
-# hardware_mon
+# Hardware monitor made for GNU/Linux
 
 # Useful for:
 1) Monitoring CPU usage
