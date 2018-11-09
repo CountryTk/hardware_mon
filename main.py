@@ -5,6 +5,7 @@ from PyQt5.QtCore import QThread, pyqtSignal, Qt, QPoint, QProcess
 import sys
 import psutil
 import time
+import os
 
 
 class Window(QWidget):
@@ -24,11 +25,18 @@ class Window(QWidget):
         self.threading = ThreadClass()
         self.m_nMouseClick_X_Coordinate = None
         self.m_nMouseClick_Y_Coordinate = None
+        self.st = os.statvfs("/")
+        self.free = self.st.f_bavail * self.st.f_frsize
+        self.total = self.st.f_blocks * self.st.f_frsize
+        self.used = (self.st.f_blocks - self.st.f_bfree) * self.st.f_frsize
+        self.usage = round(self.used/self.total*100)
         self.threading2 = ThreadClass2()
         self.threading3 = Temperature_thread()
+        self.threading4 = Disk_thread()
         self.threading3.start()
         self.threading2.start()
         self.threading.start()
+        self.threading4.start()
         self.progress_stylesheet = """
         
         QProgressBar {
@@ -70,6 +78,7 @@ class Window(QWidget):
         self.threading2.signal2.connect(self.ram_val)
         self.threading.signal.connect(self.cpu_val)
         self.threading3.signal3.connect(self.cpu_temp_val)
+        self.threading4.signal4.connect(self.disk_usage_val)
 
         self.initUI()
 
@@ -86,10 +95,12 @@ class Window(QWidget):
         self.cpu_temp.setValue(100)
         self.cpu_temp.setFormat("%p°C")
         
+        self.disk_usage = QProgressBar(self)
+        self.disk_usage.setValue(self.usage)
+        
         self.main_layout = QHBoxLayout()
         self.text_layout = QVBoxLayout()
         self.value_layout = QVBoxLayout()
-        # self.cpu_temp_layout = QHBoxLayout()
         
         self.ram_text = QLabel("<h3>RAM USAGE:</h3> ", self)
         self.ram_text.setStyleSheet("color: #00ff00")
@@ -100,6 +111,17 @@ class Window(QWidget):
         self.cpu_text = QLabel("<h3>CPU USAGE:</h3> ", self)
         self.cpu_text.setStyleSheet("color: #00ff00")
         
+        self.disk_usage_text = QLabel("<h3>DISK USED: </h3> ", self)
+        self.disk_usage_text.setStyleSheet("color: #00ff00")
+        
+        self.disk_space_left_text = QLabel("<h3>DISK SPACE LEFT:</h3> ")
+        self.disk_space_left_text.setStyleSheet("color: #00ff00")
+        self.disk_space_left_text.setAlignment(Qt.AlignBottom)
+        
+        self.disk_space_left = QLabel("<h3>" + str(int(self.free/1000000000)) + " GiB</h3>", self)
+        self.disk_space_left.setStyleSheet("color: #00ff00")
+        self.disk_space_left.setAlignment(Qt.AlignTop)
+                
         self.text_layout.addWidget(self.cpu_text)
         self.value_layout.addWidget(self.cpu)
         
@@ -109,14 +131,19 @@ class Window(QWidget):
         self.text_layout.addWidget(self.cpu_value_text)
         self.value_layout.addWidget(self.cpu_temp)
         
+        self.text_layout.addWidget(self.disk_usage_text)
+        self.value_layout.addWidget(self.disk_usage)
+        
+        self.text_layout.addWidget(self.disk_space_left_text)
+        self.value_layout.addWidget(self.disk_space_left)
+        
         self.main_layout.addLayout(self.text_layout)
         self.main_layout.addLayout(self.value_layout)
         
         self.cpu.setStyleSheet(self.progress_stylesheet)
         self.ram.setStyleSheet(self.progress_stylesheet)
-        
+        self.disk_usage.setStyleSheet(self.progress_stylesheet)
         self.cpu_temp.setStyleSheet(self.temp_stylesheet)
-        self.cpu_text.move(0, 35)
         
         self.setLayout(self.main_layout)
         self.show()
@@ -144,6 +171,14 @@ class Window(QWidget):
         
     def cpu_temp_val(self, temp_value):
         self.cpu_temp.setValue(temp_value)
+        
+    def disk_usage_val(self, value_tuple):
+        free = value_tuple[0]  
+        total = value_tuple[1]
+        used = value_tuple[2]
+        total_in_GiB = total/1000000000
+        disk_used = round(used/total*100)
+        self.disk_usage.setValue(int(disk_used))
 
 
 class ThreadClass(QThread):
@@ -156,8 +191,6 @@ class ThreadClass(QThread):
         while True:
             value = psutil.cpu_percent(interval=1, percpu=True)
             cpu_value = sum(value) / len(value)
-
-
             self.signal.emit(cpu_value)
             time.sleep(0.3)
 
@@ -194,6 +227,21 @@ class Temperature_thread(QThread):
             self.signal3.emit(temp_value)
             time.sleep(0.3)
             
+class Disk_thread(QThread):
+    
+    signal4 = pyqtSignal(object)
+    
+    def __init__(self):
+        super().__init__()
+        
+    def run(self):
+        while True:
+            st = os.statvfs("/")
+            free = st.f_bavail * st.f_frsize
+            total = st.f_blocks * st.f_frsize
+            used = (st.f_blocks - st.f_bfree) * st.f_frsize
+            self.signal4.emit((free, total, used))  
+            time.sleep(30)   
             
 if __name__ == "__main__":
     app = QApplication(sys.argv)
